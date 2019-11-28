@@ -1,3 +1,8 @@
+# prevent credential sharing for dev
+azure_credentials-apply.sh
+credentials-apply.sh
+.*-apply.sh
+
 #  Local .terraform directories
 **/.terraform/*
 
@@ -7,3 +12,6 @@
 
 # .tfvars files
 *.tfvars
+
+# output files
+output/*
