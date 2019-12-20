@@ -22,22 +22,12 @@ variable "tagStage" {
 }
 variable "tagDescription" { 
     description = "This Text will be added as a Tag 'Info' to all created resources"
-    default = "MCSPaaS-Consumption" 
+    default = "Openstack-Playground" 
 }
 
 #   ----------------------------------------------------------------------------
 #   Database Configuration
 #   ----------------------------------------------------------------------------
-
-variable "databaseName" { 
-    default = "Consumption"
-    description = "Name of the Database which stores the Data inside the MongoDB Server"
-}
-
-variable "collectionName" { 
-    default = "Kubernetes"
-    description = "Name of the collection which stores the Data inside the MongoDB Database"
-}
 
 
 #   ----------------------------------------------------------------------------
