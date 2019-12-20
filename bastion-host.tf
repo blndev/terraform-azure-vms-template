@@ -2,75 +2,29 @@
 #   Authentication
 #   ----------------------------------------------------------------------------
 
-variable "schedulerUser" {
-    description = "Name of the User to connect to the  host"
-    default = "consumption"
-}
 
-resource "tls_private_key" "scheduler" {
+resource "tls_private_key" "bastion" {
   algorithm   = "RSA"
   rsa_bits    = "2048"
 }
 
 output "privateKey" {
-  value = "${tls_private_key.scheduler.private_key_pem}"
+  value = "${tls_private_key.bastion.private_key_pem}"
   sensitive = true
 }
 output "publicKey" {
-  value = "${tls_private_key.scheduler.public_key_pem}"
+  value = "${tls_private_key.bastion.public_key_pem}"
   sensitive = true
 }
 
 resource "local_file" "privateKey" {
-    content     = "${tls_private_key.scheduler.private_key_pem}"
+    content     = "${tls_private_key.bastion.private_key_pem}"
     filename = "${path.module}/output/id_rsa.pem"
 }
 
 resource "local_file" "publicKey" {
-    content     = "${tls_private_key.scheduler.public_key_pem}"
+    content     = "${tls_private_key.bastion.public_key_pem}"
     filename = "${path.module}/output/id_rsa.pub"
-}
-
-#   ----------------------------------------------------------------------------
-#   Create vLan and Network
-#   ----------------------------------------------------------------------------
-resource "azurerm_virtual_network" "network" {
-    name                = "${local.deploymentname}-vnet"
-    address_space       = ["10.0.1.0/24"]
-    location            = "${var.location}"
-    tags                = "${local.default_tags}" 
-    resource_group_name = "${azurerm_resource_group.rg.name}"
-}
-
-resource "azurerm_subnet" "subnet-scheduler" {
-    name                 = "${local.deploymentname}-subnet-scheduler"
-    resource_group_name  = "${azurerm_resource_group.rg.name}"
-    virtual_network_name = "${azurerm_virtual_network.network.name}"
-    address_prefix       = "10.0.1.0/29"
-}
-
-resource "azurerm_network_security_group" "network-security-scheduler" {
-    name                = "${local.deploymentname}-nsg-scheduler"
-    location            = "${var.location}"
-    resource_group_name = "${azurerm_resource_group.rg.name}"
-    tags                = "${local.default_tags}" 
-
-    security_rule {
-        name                       = "SSH"
-        priority                   = 1001
-        direction                  = "Inbound"
-        access                     = "Allow"
-        protocol                   = "Tcp"
-        source_port_range          = "*"
-        destination_port_range     = "22"
-        source_address_prefix      = "*"
-        destination_address_prefix = "10.0.1.0/29"
-    }
-}
-
-resource "azurerm_subnet_network_security_group_association" "scheduler" {
-  subnet_id                 = "${azurerm_subnet.subnet-scheduler.id}"
-  network_security_group_id = "${azurerm_network_security_group.network-security-scheduler.id}"
 }
 
 #   ----------------------------------------------------------------------------
@@ -78,44 +32,48 @@ resource "azurerm_subnet_network_security_group_association" "scheduler" {
 #   ----------------------------------------------------------------------------
 
 
-resource "azurerm_public_ip" "publicip-scheduler" {
+resource "azurerm_public_ip" "publicip-bastion" {
     name                = "pip-${lower(local.deploymentname)}"
     resource_group_name = "${azurerm_resource_group.rg.name}"
     location            = "${var.location}"
     tags                = "${local.default_tags}" 
-    allocation_method   = "Static"
-
+    allocation_method   = "Dynamic"
+    domain_name_label   = "${lower(local.deploymentname)}-bastion"
 }
 
-resource "azurerm_network_interface" "scheduler-nic" {
-    name                = "${local.deploymentname}-nic-scheduler"
+output "bastion" {
+  value = "${azurerm_public_ip.publicip-bastion}"
+}
+
+resource "azurerm_network_interface" "bastion-nic" {
+    name                = "${local.deploymentname}-nic-bastion"
     resource_group_name = "${azurerm_resource_group.rg.name}"
     location            = "${var.location}"
     tags                = "${local.default_tags}" 
-    network_security_group_id = "${azurerm_network_security_group.network-security-scheduler.id}"
+    network_security_group_id = "${azurerm_network_security_group.network-security-bastion.id}"
 
     ip_configuration {
-        name                          = "${local.deploymentname}-nic-scheduler-ip"
-        subnet_id                     = "${azurerm_subnet.subnet-scheduler.id}"
+        name                          = "${local.deploymentname}-nic-bastion-ip"
+        subnet_id                     = "${azurerm_subnet.subnet-bastion.id}"
         private_ip_address_allocation = "dynamic"
-        public_ip_address_id          = "${azurerm_public_ip.publicip-scheduler.id}"
+        public_ip_address_id          = "${azurerm_public_ip.publicip-bastion.id}"
     }
 }
 
-output "Scheduler-IP" {
-    value = "${azurerm_public_ip.publicip-scheduler.ip_address}"
+output "bastion-IP" {
+    value = "${azurerm_public_ip.publicip-bastion.ip_address}"
 }
 
 #   ----------------------------------------------------------------------------
 #   Define Virtual Machine
 #   ----------------------------------------------------------------------------
-resource "azurerm_virtual_machine" "scheduler" {
-    name                  = "${local.deploymentname}-vm-scheduler"
+resource "azurerm_virtual_machine" "bastion" {
+    name                  = "${local.deploymentname}-vm-bastion"
     location              = "${var.location}"
     tags                  = "${local.default_tags}" 
     resource_group_name   = "${azurerm_resource_group.rg.name}"
-    network_interface_ids = ["${azurerm_network_interface.scheduler-nic.id}"]
-    vm_size               = "Standard_B1ls"
+    network_interface_ids = ["${azurerm_network_interface.bastion-nic.id}"]
+    vm_size               = "Standard_B2ms"
     delete_os_disk_on_termination    = true
     delete_data_disks_on_termination = true
 
@@ -123,16 +81,16 @@ resource "azurerm_virtual_machine" "scheduler" {
 #   Creating Disks
 #   ----------------------------------------------------------------------------
     storage_os_disk {
-        name              = "${local.deploymentname}-scheduler-disk-os"
+        name              = "${local.deploymentname}-bastion-disk-os"
         caching           = "ReadWrite"
         create_option     = "FromImage"
         managed_disk_type = "Standard_LRS"
     }
 
     storage_image_reference {
-        publisher = "OpenLogic"
-        offer     = "CentOS"
-        sku       = "7.5"
+        publisher = "Canonical"
+        offer     = "UbuntuServer"
+        sku       = "18.04-LTS"
         version   = "latest"
     }
 
@@ -140,15 +98,15 @@ resource "azurerm_virtual_machine" "scheduler" {
 #   Defining Operating System
 #   ----------------------------------------------------------------------------
     os_profile {
-        computer_name  = "${local.deploymentname}-scheduler"
-        admin_username = "${var.schedulerUser}"
+        computer_name  = "${local.deploymentname}-bastion"
+        admin_username = "${var.sshUser}"
     }
 
     os_profile_linux_config {
         disable_password_authentication = true
         ssh_keys {
-            path     = "/home/${var.schedulerUser}/.ssh/authorized_keys"
-            key_data = "${tls_private_key.scheduler.public_key_openssh}"
+            path     = "/home/${var.sshUser}/.ssh/authorized_keys"
+            key_data = "${tls_private_key.bastion.public_key_openssh}"
         }
     }
 
@@ -165,8 +123,8 @@ resource "azurerm_virtual_machine" "scheduler" {
 #   ----------------------------------------------------------------------------
 #   Post Creation - Install and excute Scripts
 #   ----------------------------------------------------------------------------
-resource "null_resource" remoteExecProvisionerWFolder {
-    depends_on = [azurerm_virtual_machine.scheduler]
+resource "null_resource" "remoteExecProvisionerFolder" {
+    depends_on = [azurerm_virtual_machine.bastion]
 
     # used for development purposes to execute this step every time
     # triggers = {
@@ -177,37 +135,37 @@ resource "null_resource" remoteExecProvisionerWFolder {
     # so a private key for the connection is required 
     connection {
         type     = "ssh"
-        host     = "${azurerm_public_ip.publicip-scheduler.ip_address}"
-        user     = "${var.schedulerUser}"
+        host     = "${azurerm_public_ip.publicip-bastion.fqdn}"
+        user     = "${var.sshUser}"
         agent    = false
-        private_key = "${tls_private_key.scheduler.private_key_pem}"
+        private_key = "${tls_private_key.bastion.private_key_pem}"
     }
 
     provisioner "remote-exec" {
         inline = [
-        "mkdir -p /home/${var.schedulerUser}/collector"
+        "mkdir -p /home/${var.sshUser}/app"
      ]
     }
 
-    provisioner "file" {
-        source      = "../python/collectVMs.py"
-        destination = "/home/${var.schedulerUser}/collector/collect.py"
-    }
+    # provisioner "file" {
+    #     source      = "../python/collectVMs.py"
+    #     destination = "/home/${var.sshUser}/collector/collect.py"
+    # }
+
+    # provisioner "file" {
+    #     source     = "../python/requirements.txt"
+    #     destination = "/home/${var.sshUser}/collector/requirements.txt"
+    # }
 
     provisioner "file" {
-        source     = "../python/requirements.txt"
-        destination = "/home/${var.schedulerUser}/collector/requirements.txt"
-    }
-
-    provisioner "file" {
-        source     = "scheduler/"
-        destination = "/home/${var.schedulerUser}/"
+        source     = "./hostconfig/"
+        destination = "/home/${var.sshUser}/"
     }
 
     provisioner "remote-exec" {
         inline = [
-        "chmod u+x /home/${var.schedulerUser}/init.sh",
-        "source /home/${var.schedulerUser}/init.sh"
+        "chmod u+x /home/${var.sshUser}/init.sh",
+        "source /home/${var.sshUser}/init.sh"
      ]
     }
 }

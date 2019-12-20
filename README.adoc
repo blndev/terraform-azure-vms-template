@@ -64,7 +64,6 @@ If so, then you will use all of your in the past collected data.
 
 [source,bash]
 ----
-cd terraform
 terraform init  # download all required modules
 terraform plan  # check credentials and configuration
 terraform apply # install or upgrade solution
@@ -74,8 +73,12 @@ terraform apply # install or upgrade solution
 
 Be aware: there is a public IP created. You should limit access from your source ip or remove the inbound security rule after finishing the configuration.
 
-The default user on the Machine is "consumption" and a new SSH Keypair is generated to access the vm. You will find the require information in the terraform output and in the "output" folder.
+The default user on the Machine is "linux" and a new SSH Keypair is generated to access the vm. You will find the require information in the terraform output and in the "output" folder.
 
 
 
 
+[source,bash]
+----
+ssh IPADDRESS -F sshConfig
+----

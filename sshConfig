@@ -1,0 +1,5 @@
+Host *
+  User linux
+  ForwardAgent no
+  IdentityFile ./output/id_rsa.pem
+  IdentitiesOnly yes

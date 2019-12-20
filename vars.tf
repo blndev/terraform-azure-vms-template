@@ -8,6 +8,10 @@ variable "location" {
 }
 variable "deploymentprefix" { default = "Openstack" }
 
+variable "sshUser" {
+    description = "Name of the User to connect to the host"
+    default = "linux"
+}
 
 #   ----------------------------------------------------------------------------
 #   Tags
@@ -16,9 +20,9 @@ variable "tagOwner" {
     description = "Added as Tag to all created Resources called 'owner'. Used to identify you."
 }
 
-variable "tagStage" { 
-    description = "Added as Tag to all created Resources called 'stage'"
-    default = "development" 
+variable "tagPurpose" { 
+    description = "Added as Tag to all created Resources called 'Purpose'"
+    default = "Evaluation"
 }
 variable "tagDescription" { 
     description = "This Text will be added as a Tag 'Info' to all created resources"
@@ -50,7 +54,7 @@ locals {
 locals {
 default_tags = { 
     Owner               = "${var.tagOwner}" 
-    Environment         = "${var.tagStage}"
+    Purpose             = "${var.tagPurpose}"
     DevelopmentStatus   = "${local.status}"
     Architecture        = "${local.architecture}"
     Deployment          = "${local.deploymentname}"
