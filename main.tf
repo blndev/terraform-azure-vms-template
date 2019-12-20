@@ -55,6 +55,16 @@ module "openstack" {
   deploymentname = "${local.deploymentname}"
   location = "${var.location}"
 
-  subnet = "${azurerm_subnet.subnet-cluster.id}"
+  subnet-data = "${azurerm_subnet.subnet-cluster-data.id}"
+  subnet-mgmt = "${azurerm_subnet.subnet-cluster-mgmt.id}"
   tags = "${local.default_tags}"
+}
+
+
+output "openstack-servers-mgmt" {
+  value = "${module.openstack.servers-mgmt}"
+}
+
+output "openstack-servers-data" {
+  value = "${module.openstack.servers-data}"
 }

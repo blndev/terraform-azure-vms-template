@@ -18,26 +18,40 @@ resource "azurerm_availability_set" "avs" {
   managed             = "true"
 }
 
-resource "azurerm_network_interface" "nic" {
+resource "azurerm_network_interface" "nic-data" {
     count = "${var.servers}"
-    name                      = "${var.deploymentname}-nic-${var.postfix}-${count.index+1}"
+    name                      = "${var.deploymentname}-nic-${var.postfix}-data-${count.index+1}"
     location                  = "${var.location}"
     resource_group_name       = "${var.resourceGroup}"
     tags                      = "${var.tags}" 
-    internal_dns_name_label   = "${var.deploymentname}-${var.postfix}-${count.index+1}"
+    internal_dns_name_label   = "${var.deploymentname}-${var.postfix}-data-${count.index+1}"
 
     ip_configuration {
-        name                          = "${var.deploymentname}-nic-${var.postfix}-${count.index+1}-ip"
-        subnet_id                     = "${var.subnet}"
+        name                          = "${var.deploymentname}-nic-${var.postfix}-data-${count.index+1}-ip"
+        subnet_id                     = "${var.subnet-data}"
         private_ip_address_allocation = "dynamic"
-        #private_ip_address  = "10.0.2.${typeIPrange} ${count.index}"
-        #public_ip_address_id          = "${azurerm_public_ip.publicip.id}"
     }
 }
 
+resource "azurerm_network_interface" "nic-mgmt" {
+    count = "${var.servers}"
+    name                      = "${var.deploymentname}-nic-${var.postfix}-mgmt-${count.index+1}"
+    location                  = "${var.location}"
+    resource_group_name       = "${var.resourceGroup}"
+    tags                      = "${var.tags}" 
+    internal_dns_name_label   = "${var.deploymentname}-${var.postfix}-mgmt-${count.index+1}"
+
+    ip_configuration {
+        name                          = "${var.deploymentname}-nic-${var.postfix}-mgmt-${count.index+1}-ip"
+        subnet_id                     = "${var.subnet-mgmt}"
+        private_ip_address_allocation = "dynamic"
+    }
+}
+
+
 resource "azurerm_virtual_machine" "host" {
     count = "${var.servers}"
-    depends_on = ["azurerm_availability_set.avs", "azurerm_network_interface.nic"]
+    depends_on = ["azurerm_availability_set.avs", "azurerm_network_interface.nic-data", "azurerm_network_interface.nic-mgmt"]
 
     name                  = "${var.deploymentname}-vm-${var.postfix}-${count.index+1}"
     location              = "${var.location}"
@@ -45,7 +59,11 @@ resource "azurerm_virtual_machine" "host" {
     tags                  = "${var.tags}" 
     vm_size               = "${var.machinesize}"
 
-    network_interface_ids = ["${azurerm_network_interface.nic.*.id[count.index]}"]
+    network_interface_ids = [
+        "${azurerm_network_interface.nic-data.*.id[count.index]}",
+        "${azurerm_network_interface.nic-mgmt.*.id[count.index]}"
+    ]
+    primary_network_interface_id = "${azurerm_network_interface.nic-mgmt.*.id[count.index]}"
     availability_set_id   = "${azurerm_availability_set.avs.id}"
 
     delete_os_disk_on_termination    = true
@@ -75,7 +93,7 @@ resource "azurerm_virtual_machine" "host" {
     }
 
     os_profile {
-        computer_name  = "${var.deploymentname}-${var.postfix}-${count.index+1}"
+        computer_name  = "${lower(var.deploymentname)}-${lower(var.postfix)}-${count.index+1}"
         admin_username = "${var.sshUser}"
     }
 

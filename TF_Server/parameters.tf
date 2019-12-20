@@ -8,7 +8,8 @@ variable "createLoadbalancer" {
 
 variable "postfix" {}
 variable "deploymentname" {}
-variable "subnet" {}
+variable "subnet-data" {}
+variable "subnet-mgmt" {}
 variable "location" {}
 variable "resourceGroup" {}
 variable "diag_storage_uri" {}
@@ -32,6 +33,10 @@ variable "sshKey" {
   description = "the public key used to connect to the machines" 
 }
 
-output "machines" {
-  value = "${azurerm_network_interface.nic.*.internal_dns_name_label}"
+output "servers-mgmt" {
+  value = "${azurerm_network_interface.nic-mgmt.*.internal_dns_name_label}"
+}
+
+output "servers-data" {
+  value = "${azurerm_network_interface.nic-data.*.internal_dns_name_label}"
 }
