@@ -87,14 +87,13 @@ resource "azurerm_subnet" "subnet-cluster-data" {
 }
 
 resource "azurerm_network_security_group" "network-security-cluster-data" {
-    depends_on          = [azurerm_subnet.subnet-cluster-data]
     name                = "${local.deploymentname}-nsg-cluster-data"
     location            = "${var.location}"
     resource_group_name = "${azurerm_resource_group.rg.name}"
     tags                = "${local.default_tags}" 
 
     security_rule {
-        name                       = "SSH"
+        name                       = "ANY"
         priority                   = 1001
         direction                  = "Inbound"
         access                     = "Allow"
