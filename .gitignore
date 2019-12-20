@@ -14,4 +14,4 @@ credentials-apply.sh
 *.tfvars
 
 # output files
-terraform/output/*
+output/*
