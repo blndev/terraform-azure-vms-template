@@ -56,7 +56,7 @@ Usually i create a copy of "credentials-template.sh" and name it "credentials-ap
 Then i can add my credentials into "credentials-apply.sh" and execute ```source credentials-apply.sh``` once, before doing anything with terraform.
 That prevents on development systems that the credentials are shown in the bash history and that they are mixed up for different projects because of global environment variables. 
 
-## Install Consumption Backend on Azure
+## Create Openstack Playground on Azure
 
 Please check that on plan/apply the database will not be destroyed.
 If so, then you will use all of your in the past collected data.
@@ -69,3 +69,13 @@ terraform init  # download all required modules
 terraform plan  # check credentials and configuration
 terraform apply # install or upgrade solution
 ----
+
+
+
+Be aware: there is a public IP created. You should limit access from your source ip or remove the inbound security rule after finishing the configuration.
+
+The default user on the Machine is "consumption" and a new SSH Keypair is generated to access the vm. You will find the require information in the terraform output and in the "output" folder.
+
+
+
+
