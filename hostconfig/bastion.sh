@@ -1,6 +1,7 @@
 # patch the system
-sudo apt update -y
-sudo apt upgrade -y
+echo > test.txt
+#sudo apt update -y
+#sudo apt upgrade -y
 
 # enable auto updates
 # sudo yum install -y yum-cron

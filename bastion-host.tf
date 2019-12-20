@@ -153,16 +153,20 @@ resource "null_resource" "installBastion" {
     #     destination = "/home/${var.sshUser}/collector/requirements.txt"
     # }
 
-    provisioner "file" {
-        source     = "./hostconfig/"
-        destination = "/home/${var.sshUser}/"
+    # provisioner "file" {
+    #     source     = "./hostconfig/"
+    #     destination = "/home/${var.sshUser}/"
+    # }
+
+    # provisioner "remote-exec" {
+    #     inline = [
+    #     "chmod u+x /home/${var.sshUser}/init.sh"
+    #     ,
+    #     "source /home/${var.sshUser}/init.sh"
+    #  ]
+    # }
+    provisioner "remote-exec" {
+        script     = "./hostconfig/bastion.sh"
     }
 
-    provisioner "remote-exec" {
-        inline = [
-        "chmod u+x /home/${var.sshUser}/init.sh"
-        ,
-        "source /home/${var.sshUser}/init.sh"
-     ]
-    }
 }
