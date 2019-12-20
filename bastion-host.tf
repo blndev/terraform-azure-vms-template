@@ -41,8 +41,8 @@ resource "azurerm_public_ip" "publicip-bastion" {
     domain_name_label   = "${lower(local.deploymentname)}-bastion"
 }
 
-output "bastion" {
-  value = "${azurerm_public_ip.publicip-bastion}"
+output "bastion-host" {
+    value = "${azurerm_public_ip.publicip-bastion.fqdn}"
 }
 
 resource "azurerm_network_interface" "bastion-nic" {
@@ -58,10 +58,6 @@ resource "azurerm_network_interface" "bastion-nic" {
         private_ip_address_allocation = "dynamic"
         public_ip_address_id          = "${azurerm_public_ip.publicip-bastion.id}"
     }
-}
-
-output "bastion-IP" {
-    value = "${azurerm_public_ip.publicip-bastion.ip_address}"
 }
 
 #   ----------------------------------------------------------------------------
