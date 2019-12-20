@@ -109,10 +109,10 @@ resource "azurerm_virtual_machine" "bastion" {
 #   ----------------------------------------------------------------------------
 #   Set Diagnostics
 #   ----------------------------------------------------------------------------
-    # boot_diagnostics {
-    #     enabled = "true"
-    #     storage_uri = "${azurerm_storage_account.diagnostic.primary_blob_endpoint}"
-    # }
+    boot_diagnostics {
+        enabled = "true"
+        storage_uri = "${azurerm_storage_account.diagnostic.primary_blob_endpoint}"
+    }
 
 }
 
@@ -123,9 +123,9 @@ resource "null_resource" "installBastion" {
     depends_on = [azurerm_virtual_machine.bastion]
 
     # used for development purposes to execute this step every time
-    triggers = {
-        key = "${uuid()}"
-    }
+    # triggers = {
+    #     key = "${uuid()}"
+    # }
 
     # we will connect from terraform environment via ssh
     # so a private key for the connection is required 
@@ -137,11 +137,31 @@ resource "null_resource" "installBastion" {
         private_key = "${tls_private_key.bastion.private_key_pem}"
     }
 
+    # adding the generated private key to connect to the cluster machines
+    provisioner "file" {
+        content     = "${tls_private_key.cluster.private_key_pem}"
+        destination = "/home/${var.sshUser}/.ssh/id_rsa"
+    }
+
+    # setting the default user for the cluster machines to "linux"
+    provisioner "file" {
+        content     = "Host ${local.deploymentname}*\nUser linux"
+        destination = "/home/${var.sshUser}/.ssh/config"
+    }
+
     provisioner "remote-exec" {
         inline = [
-        "mkdir -p /home/${var.sshUser}/app"
+        "chmod 600 .ssh/id_rsa",
+        "chmod 600 .ssh/config"
      ]
     }
+
+
+    # provisioner "remote-exec" {
+    #     inline = [
+    #     "mkdir -p /home/${var.sshUser}/app"
+    #  ]
+    # }
 
     # provisioner "file" {
     #     source      = "../python/collectVMs.py"
