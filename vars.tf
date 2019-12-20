@@ -13,6 +13,14 @@ variable "sshUser" {
     default = "linux"
 }
 
+variable "servercount" {
+    description = "Amount of Servers in the Cluster"
+    default = "5"
+}
+variable "serversize" {
+    default = "Standard_B2ms"
+}
+
 #   ----------------------------------------------------------------------------
 #   Tags
 #   ----------------------------------------------------------------------------
@@ -48,7 +56,7 @@ resource "random_id" "deploymentsuffix" {
 
 locals {
   deploymentname = "${var.deploymentprefix}-${random_id.deploymentsuffix.hex}"
-  deploymentnameCN = "${var.deploymentprefix}${random_id.deploymentsuffix.hex}" # only characters and numbers e.g. for storage accounts
+  deploymentnameCN = "${lower(var.deploymentprefix)}${lower(random_id.deploymentsuffix.hex)}" # only characters and numbers e.g. for storage accounts
 }
 
 locals {

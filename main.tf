@@ -37,3 +37,24 @@ resource "azurerm_resource_group" "rg" {
   tags     = "${local.default_tags}" 
 }
 
+resource "tls_private_key" "cluster" {
+  algorithm   = "RSA"
+  rsa_bits    = "2048"
+}
+module "openstack" {
+  source = "./TF_Server"
+
+  servers = "${var.servercount}"
+  machinesize = "${var.serversize}"
+  postfix = "worker"
+
+  resourceGroup = "${azurerm_resource_group.rg.name}"
+  diag_storage_uri = "${azurerm_storage_account.diagnostic.primary_blob_endpoint}"
+  sshKey = "${tls_private_key.cluster.public_key_openssh}"
+
+  deploymentname = "${local.deploymentname}"
+  location = "${var.location}"
+
+  subnet = "${azurerm_subnet.subnet-cluster.id}"
+  tags = "${local.default_tags}"
+}
