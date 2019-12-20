@@ -41,8 +41,8 @@ resource "azurerm_public_ip" "publicip-bastion" {
     domain_name_label   = "${lower(local.deploymentname)}-bastion"
 }
 
-output "bastion-host" {
-    value = "${azurerm_public_ip.publicip-bastion.fqdn}"
+output "ssh" {
+    value = "chmod 600 ./output/id_rsa* && ssh ${azurerm_public_ip.publicip-bastion.fqdn} -F sshConfig"
 }
 
 resource "azurerm_network_interface" "bastion-nic" {
@@ -119,13 +119,13 @@ resource "azurerm_virtual_machine" "bastion" {
 #   ----------------------------------------------------------------------------
 #   Post Creation - Install and excute Scripts
 #   ----------------------------------------------------------------------------
-resource "null_resource" "remoteExecProvisionerFolder" {
+resource "null_resource" "installBastion" {
     depends_on = [azurerm_virtual_machine.bastion]
 
     # used for development purposes to execute this step every time
-    # triggers = {
-    #     key = "${uuid()}"
-    # }
+    triggers = {
+        key = "${uuid()}"
+    }
 
     # we will connect from terraform environment via ssh
     # so a private key for the connection is required 
@@ -160,7 +160,8 @@ resource "null_resource" "remoteExecProvisionerFolder" {
 
     provisioner "remote-exec" {
         inline = [
-        "chmod u+x /home/${var.sshUser}/init.sh",
+        "chmod u+x /home/${var.sshUser}/init.sh"
+        ,
         "source /home/${var.sshUser}/init.sh"
      ]
     }
