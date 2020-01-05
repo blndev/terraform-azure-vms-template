@@ -1,7 +1,10 @@
 # patch the system
-echo > test.txt
-#sudo apt update -y
-#sudo apt upgrade -y
+
+sudo apt update -y
+sudo apt upgrade -y
+
+#adapt motd
+sudo apt install screenfetch
 
 # enable auto updates
 # sudo yum install -y yum-cron
