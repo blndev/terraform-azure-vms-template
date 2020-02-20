@@ -32,9 +32,9 @@ locals {
 #   ----------------------------------------------------------------------------
 
 resource "azurerm_resource_group" "rg" {
-  name     = "${local.deploymentname}"
-  location = "${var.location}"
-  tags     = "${local.default_tags}" 
+  name     = local.deploymentname
+  location = var.location
+  tags     = local.default_tags
 }
 
 resource "tls_private_key" "cluster" {
@@ -44,27 +44,27 @@ resource "tls_private_key" "cluster" {
 module "openstack" {
   source = "./TF_Server"
 
-  servers = "${var.servercount}"
-  machinesize = "${var.serversize}"
+  servers = var.servercount
+  machinesize = var.serversize
   postfix = "worker"
 
-  resourceGroup = "${azurerm_resource_group.rg.name}"
-  diag_storage_uri = "${azurerm_storage_account.diagnostic.primary_blob_endpoint}"
-  sshKey = "${tls_private_key.cluster.public_key_openssh}"
+  resourceGroup = azurerm_resource_group.rg.name
+  diag_storage_uri = azurerm_storage_account.diagnostic.primary_blob_endpoint
+  sshKey = tls_private_key.cluster.public_key_openssh
 
-  deploymentname = "${local.deploymentname}"
-  location = "${var.location}"
+  deploymentname = local.deploymentname
+  location = var.location
 
-  subnet-data = "${azurerm_subnet.subnet-cluster-data.id}"
-  subnet-mgmt = "${azurerm_subnet.subnet-cluster-mgmt.id}"
-  tags = "${local.default_tags}"
+  subnet-data = azurerm_subnet.subnet-cluster-data.id
+  subnet-mgmt = azurerm_subnet.subnet-cluster-mgmt.id
+  tags = local.default_tags
 }
 
 
 output "openstack-servers-mgmt" {
-  value = "${module.openstack.servers-mgmt}"
+  value = module.openstack.servers-mgmt
 }
 
 output "openstack-servers-data" {
-  value = "${module.openstack.servers-data}"
+  value = module.openstack.servers-data
 }

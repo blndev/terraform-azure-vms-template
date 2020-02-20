@@ -18,12 +18,12 @@ output "publicKey" {
 }
 
 resource "local_file" "privateKey" {
-    content     = "${tls_private_key.bastion.private_key_pem}"
+    content     = tls_private_key.bastion.private_key_pem
     filename = "${path.module}/output/id_rsa.pem"
 }
 
 resource "local_file" "publicKey" {
-    content     = "${tls_private_key.bastion.public_key_pem}"
+    content     = tls_private_key.bastion.public_key_pem
     filename = "${path.module}/output/id_rsa.pub"
 }
 
@@ -34,9 +34,9 @@ resource "local_file" "publicKey" {
 
 resource "azurerm_public_ip" "publicip-bastion" {
     name                = "pip-${lower(local.deploymentname)}"
-    resource_group_name = "${azurerm_resource_group.rg.name}"
-    location            = "${var.location}"
-    tags                = "${local.default_tags}" 
+    resource_group_name = azurerm_resource_group.rg.name
+    location            = var.location
+    tags                = local.default_tags
     allocation_method   = "Dynamic"
     domain_name_label   = "${lower(local.deploymentname)}-bastion"
 }
@@ -47,16 +47,16 @@ output "ssh" {
 
 resource "azurerm_network_interface" "bastion-nic" {
     name                = "${local.deploymentname}-nic-bastion"
-    resource_group_name = "${azurerm_resource_group.rg.name}"
-    location            = "${var.location}"
-    tags                = "${local.default_tags}" 
-    network_security_group_id = "${azurerm_network_security_group.network-security-bastion.id}"
+    resource_group_name = azurerm_resource_group.rg.name
+    location            = var.location
+    tags                = local.default_tags
+    network_security_group_id = azurerm_network_security_group.network-security-bastion.id
 
     ip_configuration {
         name                          = "${local.deploymentname}-nic-bastion-ip"
-        subnet_id                     = "${azurerm_subnet.subnet-bastion.id}"
+        subnet_id                     = azurerm_subnet.subnet-bastion.id
         private_ip_address_allocation = "dynamic"
-        public_ip_address_id          = "${azurerm_public_ip.publicip-bastion.id}"
+        public_ip_address_id          = azurerm_public_ip.publicip-bastion.id
     }
 }
 
@@ -65,9 +65,9 @@ resource "azurerm_network_interface" "bastion-nic" {
 #   ----------------------------------------------------------------------------
 resource "azurerm_virtual_machine" "bastion" {
     name                  = "${local.deploymentname}-vm-bastion"
-    location              = "${var.location}"
-    tags                  = "${local.default_tags}" 
-    resource_group_name   = "${azurerm_resource_group.rg.name}"
+    location              = var.location
+    tags                  = local.default_tags
+    resource_group_name   = azurerm_resource_group.rg.name
     network_interface_ids = ["${azurerm_network_interface.bastion-nic.id}"]
     vm_size               = "Standard_B2ms"
     delete_os_disk_on_termination    = true
@@ -95,14 +95,14 @@ resource "azurerm_virtual_machine" "bastion" {
 #   ----------------------------------------------------------------------------
     os_profile {
         computer_name  = "${local.deploymentname}-bastion"
-        admin_username = "${var.sshUser}"
+        admin_username = var.sshUser
     }
 
     os_profile_linux_config {
         disable_password_authentication = true
         ssh_keys {
             path     = "/home/${var.sshUser}/.ssh/authorized_keys"
-            key_data = "${tls_private_key.bastion.public_key_openssh}"
+            key_data = tls_private_key.bastion.public_key_openssh
         }
     }
 
@@ -111,7 +111,7 @@ resource "azurerm_virtual_machine" "bastion" {
 #   ----------------------------------------------------------------------------
     boot_diagnostics {
         enabled = "true"
-        storage_uri = "${azurerm_storage_account.diagnostic.primary_blob_endpoint}"
+        storage_uri = azurerm_storage_account.diagnostic.primary_blob_endpoint
     }
 
 }
@@ -131,15 +131,15 @@ resource "null_resource" "installBastion" {
     # so a private key for the connection is required 
     connection {
         type     = "ssh"
-        host     = "${azurerm_public_ip.publicip-bastion.fqdn}"
-        user     = "${var.sshUser}"
+        host     = azurerm_public_ip.publicip-bastion.fqdn
+        user     = var.sshUser
         agent    = false
-        private_key = "${tls_private_key.bastion.private_key_pem}"
+        private_key = tls_private_key.bastion.private_key_pem
     }
 
     # adding the generated private key to connect to the cluster machines
     provisioner "file" {
-        content     = "${tls_private_key.cluster.private_key_pem}"
+        content     = tls_private_key.cluster.private_key_pem
         destination = "/home/${var.sshUser}/.ssh/id_rsa"
     }
 

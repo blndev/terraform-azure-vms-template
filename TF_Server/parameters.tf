@@ -14,7 +14,7 @@ variable "location" {}
 variable "resourceGroup" {}
 variable "diag_storage_uri" {}
 
-variable "tags" {type = "map"}
+variable "tags" {type = map(string)}
 
 variable "machinesize" {
   default="Standard_D2s_V3"
