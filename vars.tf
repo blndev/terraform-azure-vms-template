@@ -6,7 +6,10 @@ variable "location" {
     default = "westeurope"
     description="use \"az account list-locations\" to see available locations"
 }
-variable "deploymentprefix" { default = "Openstack" }
+variable "deploymentprefix" { 
+    description = "A Shortname which is placed before every ressource created at azure. E.g template-vm-master-01"
+    default = "Template" 
+}
 
 variable "sshUser" {
     description = "Name of the User to connect to the host"
@@ -15,11 +18,20 @@ variable "sshUser" {
 
 variable "servercount" {
     description = "Amount of Servers in the Cluster"
-    default = "5"
+    default = "1"
 }
 variable "serversize" {
     default = "Standard_B2ms"
 }
+
+#   ----------------------------------------------------------------------------
+#   General Settings
+#   ----------------------------------------------------------------------------
+
+# OPerating System
+# Bastion Size
+# Master Size
+# Public DNS Name for Bastion
 
 #   ----------------------------------------------------------------------------
 #   Tags
@@ -34,16 +46,11 @@ variable "tagPurpose" {
 }
 variable "tagDescription" { 
     description = "This Text will be added as a Tag 'Info' to all created resources"
-    default = "Openstack-Playground" 
+    default = "ABC-Playground" 
 }
 
 #   ----------------------------------------------------------------------------
-#   Database Configuration
-#   ----------------------------------------------------------------------------
-
-
-#   ----------------------------------------------------------------------------
-#   Calculated Variables
+#   Calculated Variables - please do not change them
 #   ----------------------------------------------------------------------------
 
 resource "random_id" "deploymentsuffix" {

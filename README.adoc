@@ -1,8 +1,18 @@
 :Title: 
 :Description: 
 
-# Openstack Lab @ Azure
-A Ubuntu based Openstack - Lab Environment, run on Azure, deployed via Terraform
+# What is it?
+It's a Ubuntu LTS based Lab Environment, run on Azure, deployed via Terraform.
+There is no Workload deployed, only the Infrastructure.
+
+As Infrastructure it installs a small Jump and Management Host,create a new Public Key Pair and enable SSH on it.
+In addition it installs n (see config) Servers. These Servers are only reachable via SSH from the Jump. Therefore they are placed in a dedicated Subnet.
+All Servers have two NICs. One for Management Traffic from Jump and one for the inter Server communication.
+
+This Template is for example used by me for an Openstack Playground and also for an Rancher Kubernetes Playground.
+
+## What is not Active
+For cost reasons this Temnplate does not activate Azure Backup, Azure Log Diagnostics and such services.
 
 # Prerequisites
 To install this Lab, you need to fulfill some requirements.
@@ -56,7 +66,7 @@ Usually i create a copy of "credentials-template.sh" and name it "credentials-ap
 Then i can add my credentials into "credentials-apply.sh" and execute ```source credentials-apply.sh``` once, before doing anything with terraform.
 That prevents on development systems that the credentials are shown in the bash history and that they are mixed up for different projects because of global environment variables. 
 
-## Create Openstack Playground on Azure
+## Create your Playground on Azure
 
 Please check that on plan/apply the database will not be destroyed.
 If so, then you will use all of your in the past collected data.
@@ -75,10 +85,20 @@ Be aware: there is a public IP created. You should limit access from your source
 
 The default user on the Machine is "linux" and a new SSH Keypair is generated to access the vm. You will find the require information in the terraform output and in the "output" folder.
 
-
-
-
 [source,bash]
 ----
 ssh IPADDRESS -F sshConfig
 ----
+
+To remove every resource you have created just execute
+[source,bash]
+----
+terraform destroy -y
+----
+
+# Configuration
+
+Alle configuration can be done via Environment Variable or via teh vars.tf File.
+There is no need to change the other Files.
+
+The real Workload will be deployed via _hostconfig/bastion.sh_.

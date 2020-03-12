@@ -1,5 +1,4 @@
 # patch the system
-
 sudo apt update -y
 sudo apt upgrade -y
 
@@ -14,6 +13,9 @@ sudo apt install screenfetch
 # sudo mv yum-cron-hourly.conf /etc/yum/yum-cron-hourly.conf
 # sudo chown root:root /etc/yum/yum-cron-hourly.*
 # sudo systemctl start yum-cron
+
+# software deployments
+sudo apt install salt-master
 
 # Python3
 
